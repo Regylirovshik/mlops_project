@@ -1,77 +1,49 @@
-# Template for Data Science Project
+FYI: Files in repo still not changed
 
-This repo aims to give a robust starting point to any Data Science related
-project.
+## SwissLog: Robust Anomaly Detection and Localization for Interleaved Unstructured Logs
 
-It contains readymade tools setup to start adding dependencies and coding.
+@inproceedings{li2020swisslog,
+  title={SwissLog: Robust and Unified Deep Learning Based Log Anomaly Detection for Diverse Faults},
+  author={Li, Xiaoyun and Chen, Pengfei and Jing, Linxiao and He, Zilong and Yu, Guangba},
+  booktitle={2020 IEEE 31st International Symposium on Software Reliability Engineering (ISSRE)},
+  pages={92--103},
+  year={2020},
+  organization={IEEE}
+}
 
-To get yourself familiar with tools used here watch
-[my talk on Data Science project setup (in Russian)](https://youtu.be/jLIAiDMyseQ)
+@article{li2022swisslog,
+  title={SwissLog: Robust Anomaly Detection and Localization for Interleaved Unstructured Logs},
+  author={Li, Xiaoyun and Chen, Pengfei and Jing, Linxiao and He, Zilong and Yu, Guangba},
+  journal={IEEE Transactions on Dependable and Secure Computing},
+  year={2022},
+  publisher={IEEE}
+}
 
-**If you use this repo as a template - leave a star please** because template
-usages don't count in Forks.
+**Abstract**—Modern distributed systems generate interleaved logs when running in parallel. Identifiers (ID) are always attached to them
+to trace running instances or entities in logs. Therefore, log messages can be grouped by the same IDs to help anomaly detection and
+localization. The existing approaches to achieve this still fall short meeting these challenges: 1) Log is solely processed in single
+components without mining log dependencies. 2) Log formats are continually changing in modern software systems. 3) It is challenging
+to detect latent performance issues non-intrusively by trivial monitoring tools. To remedy the above shortcomings, we propose
+SwissLog, a robust anomaly detection and localization tool for interleaved unstructured logs. SwissLog focuses on log sequential
+anomalies and tries to dig out possible performance issues. SwissLog constructs ID relation graphs across distributed components and
+groups log messages by IDs. Moreover, we propose an online data-driven log parser without parameter tuning. The grouped log
+messages are parsed via the novel log parser and transformed with semantic and temporal embedding. Finally, SwissLog utilizes an
+attention-based Bi-LSTM model and a heuristic searching algorithm to detect and localize anomalies in instance-granularity,
+respectively. The experiments on real-world and synthetic datasets confirm the effectiveness, efficiency, and robustness of SwissLog.
+**Index Terms**—deep learning; log parsing; anomaly detection; anomaly localization; log correlation
 
-## Workflow
+---
 
-Experiments and technology discovery are usualy performed on Jupyter Notebooks.
-For them `notebooks` directory is reserved. More info on working with Notebooks
-could be found in `notebooks/README.md`.
+## Datasets
+This demo adopts logpai benchmark. [Logpai](https://github.com/logpai/logparser) adopts 16 real-world log datasets ranging from distributed systems, supercomputers, operating systems, mobile systems, server applications, to standalone software including HDFS, Hadoop, Spark, Zookeeper, BGL, HPC, Thunderbird, Windows, Linux, Android, HealthApp, Apache, Proxifier, OpenSSH, OpenStack, and Mac. The above log datasets are provided by [LogHub](https://github.com/logpai/loghub). Each dataset contains 2,000 log samples with its ground truth tagged by a rule-based log parser.
 
-More mature part of pipeline (functions, classes, etc) are stored in `.py` files
-in main package directory (by default `ds_project`).
+---
 
-## What to change?
+## Models 
+Original model SwissLog from the article. 
+It's based on attention-based Bi-LSTM model and a heuristic searching algorithm
 
-- project name (default: `ds_project`)
-  - in `pyproject.toml` - tool.poetry.name
-  - main project directory (`ds_project`)
-  - test in `tests` directory
-- line length (default: `90`) [Why 90?](https://youtu.be/esZLCuWs_2Y?t=1287)
-  - in `pyproject.toml` in blocks
-    - black
-    - isort
-  - in `setup.cfg` for `flake8`
-  - in `.pre-commit-config.yaml` for `prettier`
+## Pipeline
 
-## How to setup an environment?
+![pipeline](./pictures/pipeline.png)
 
-This template use `poetry` to manage dependencies of your project. They
-
-First you need to
-[install poetry](https://python-poetry.org/docs/#installation).
-
-Then if you use `conda` (recommended) to manage environments (to use regular
-virtualenvenv just skip this step):
-
-- tell `poetry` not to create new virtualenv for you
-
-  (instead `poetry` will use currently activated virtualenv):
-
-  `poetry config virtualenvs.create false`
-
-- create new `conda` environment for your project (change env name for your
-  desired one):
-
-  `conda create -n ds_project python=3.9`
-
-- actiave environment:
-
-  `conda activate ds_project`
-
-Now you are ready to add dependencies to your project. For this use
-[`add` command](https://python-poetry.org/docs/cli/#add):
-
-`poetry add scikit-learn torch <any_package_you_need>`
-
-Next run `poetry install` to check your final state are even with configs.
-
-After that add changes to git and commit them
-`git add pyproject.toml poetry.lock`
-
-Finally add `pre-commit` hooks to git: `pre-commit install`
-
-At this step you are ready to write clean reproducible code!
-
-## More tools
-
-- Changelog generation: https://towncrier.readthedocs.io/en/stable/
