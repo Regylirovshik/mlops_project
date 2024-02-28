@@ -1,23 +1,6 @@
 FYI: Files in repo still not changed
 
-## SwissLog: Robust Anomaly Detection and Localization for Interleaved Unstructured Logs
-
-@inproceedings{li2020swisslog,
-  title={SwissLog: Robust and Unified Deep Learning Based Log Anomaly Detection for Diverse Faults},
-  author={Li, Xiaoyun and Chen, Pengfei and Jing, Linxiao and He, Zilong and Yu, Guangba},
-  booktitle={2020 IEEE 31st International Symposium on Software Reliability Engineering (ISSRE)},
-  pages={92--103},
-  year={2020},
-  organization={IEEE}
-}
-
-@article{li2022swisslog,
-  title={SwissLog: Robust Anomaly Detection and Localization for Interleaved Unstructured Logs},
-  author={Li, Xiaoyun and Chen, Pengfei and Jing, Linxiao and He, Zilong and Yu, Guangba},
-  journal={IEEE Transactions on Dependable and Secure Computing},
-  year={2022},
-  publisher={IEEE}
-}
+## [SwissLog: Robust Anomaly Detection and Localization for Interleaved Unstructured Logs](https://yuxiaoba.github.io/publication/swisslog22/swisslog22.pdf)
 
 **Abstract**—Modern distributed systems generate interleaved logs when running in parallel. Identifiers (ID) are always attached to them
 to trace running instances or entities in logs. Therefore, log messages can be grouped by the same IDs to help anomaly detection and
@@ -32,12 +15,9 @@ attention-based Bi-LSTM model and a heuristic searching algorithm to detect and 
 respectively. The experiments on real-world and synthetic datasets confirm the effectiveness, efficiency, and robustness of SwissLog.
 **Index Terms**—deep learning; log parsing; anomaly detection; anomaly localization; log correlation
 
----
-
 ## Datasets
 This demo adopts logpai benchmark. [Logpai](https://github.com/logpai/logparser) adopts 16 real-world log datasets ranging from distributed systems, supercomputers, operating systems, mobile systems, server applications, to standalone software including HDFS, Hadoop, Spark, Zookeeper, BGL, HPC, Thunderbird, Windows, Linux, Android, HealthApp, Apache, Proxifier, OpenSSH, OpenStack, and Mac. The above log datasets are provided by [LogHub](https://github.com/logpai/loghub). Each dataset contains 2,000 log samples with its ground truth tagged by a rule-based log parser.
 
----
 
 ## Models 
 Original model SwissLog from the article. 
@@ -45,5 +25,4 @@ It's based on attention-based Bi-LSTM model and a heuristic searching algorithm
 
 ## Pipeline
 
-![pipeline](./pictures/pipeline.png)
-
+![image](https://github.com/Regylirovshik/mlops_project/assets/99333239/9c569831-cb8f-40df-8189-fb0cc15ead62)
