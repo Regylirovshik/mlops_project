@@ -1,18 +1,15 @@
 import torch
 from torch import nn
-from  torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from torch.autograd import Variable
 from datetime import datetime
 def sort_batch(data, time_data, label,length):
     batch_size=data.size(0)
-
-#    inx=torch.from_numpy(np.argsort(length.numpy())[::-1].copy())i
     sorted_lengths, inx = torch.sort(length, dim=0, descending=True)
     data = data[inx]
     time_data = time_data[inx]
     label = label[inx]
     length = length[inx]
-    # length转化为了list格式，不再使用torch.Tensor格式
     length = list(length.cpu().numpy())
     return (data, time_data, label, length)
 
@@ -45,27 +42,12 @@ class TimeEmbedding(nn.Module):
             nn.init.xavier_uniform_(k)
 
     def forward(self, x):
-        # x: [b, timestep]
-        # w: [1, h]
-        # b: [h, 1]
-        # p_d = d_t * W_d + b_d
-        # t: the t_th step in the sequence
-        # d: dimension
         output = []
-        #import pdb; pdb.set_trace()
-       # for batch in range(x.size()[0]):
-       #     t_e = []
-       #     for t in range(x.size()[1]):
-        x = x.unsqueeze(2) 
-        # x: [b, t, 1]
-        # p: [b, s, h]
+        x = x.unsqueeze(2)
         projection = torch.mul(x, self.params['weights']) + self.params['biases'] # [h,1]
         s = self.pred(projection)  
         embed = torch.einsum('bsv,vi->bsi', s, self.params['embedding_matrix'])
-        #t_e.appennd(embed)
-        #output.append(t_e)
-        
-        #embed = torch.einsum('bsv,vi->bsi', output, self.params['embedding_matrix'])
+
         return embed
 
 
@@ -87,11 +69,8 @@ class BiLSTM(nn.Module):
         self.attnFlag = attnFlag
         self.time_embedding_dim = time_embedding_dim
         self.input_dim = embed_dim + time_embedding_dim
-       # if timeembedding is None:
         self.timeembedding = TimeEmbedding(batch_size, hidden_dim, time_embedding_dim)
-        #if timeembedding is not None:
-        #    self.timeembedding.load_state_dict(torch.load(timeembedding))
-        self.layer1=nn.ModuleList()
+        self.layer1 = nn.ModuleList()
         self.layer1.append(nn.LSTM(input_size=self.input_dim,hidden_size=hidden_dim, \
                         num_layers=num_layers,batch_first=True, \
                         dropout=dropout,bidirectional=False))
@@ -120,28 +99,18 @@ class BiLSTM(nn.Module):
 
     def forward(self,x, t_x,y=None,length=None):
         batch_size=x.size(0)
-        # import pdb; pdb.set_trace()
         max_length=torch.max(length)
-        #if self.perf:
         t_x = t_x[:, 0:max_length]
-        # print(len(t_x))
-        # print(max_length)
         p = datetime.now()
         
         t_e_x = self.timeembedding(t_x)
-        # t_e_x = t_x
-        # print("%s" % (datetime.now()-p).microseconds)
-        #else:
-        x=x[:,0:max_length,:]
-        # t_e_x = t_x.unsqueeze(2)
+        x = x[:, 0:max_length, :]
+
         y = y[:]
         length = length[:]
          
         x, t_e_x,y,length=sort_batch(x, t_e_x,y,length)
-        #x_cat = (x.type(torch.FloatTensor) + t_e_x.type(torch.FloatTensor)) / 2
-        #x_fusion = x_fusion.type(torch.FloatTensor)
         x_cat = torch.cat([x.type(torch.FloatTensor), t_e_x.type(torch.FloatTensor)], 2)
-#        x,y=x.to(self.device),y.to(self.device)
         hidden=[ self.init_hidden(batch_size) for l in range(self.bi_num)]
 
         out=[x_cat,reverse_padded_sequence(x_cat,length,batch_first=True)]
@@ -166,7 +135,6 @@ class BiLSTM(nn.Module):
             output = self.layer2(r_att)
         else:
             output = self.layer2(out)
-#        output = torch.squeeze(output)
         return y, output, length
 
 def reverse_padded_sequence(inputs, lengths, batch_first=True):

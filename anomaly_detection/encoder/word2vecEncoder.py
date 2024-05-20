@@ -1,13 +1,9 @@
 from tqdm import tqdm
-import csv
 import pickle
-import re
-import random
 import fasttext
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
-import gensim
 import argparse
 
 class SemanticVec:
@@ -27,23 +23,15 @@ class SemanticVec:
         return result
 
     def run(self):
-        # loadtemplate()
-        # t2w = gensim.models.KeyedVectors.load_word2vec_format(self.w2vmodel, binary=False, encoding='utf8')
         t2w = pickle.load(open(self.t2wFN, 'rb'))
-        # preprocess()
-        # import pdb; pdb.set_trace()
         self.preprocess(t2w)
-        # word2vec()
         self.word2vec()
-        # calTFIDF()
         weight, vectorizer = self.calTFIDF()
         senvec = dict()
         print('Semantic Vectorization...')
-        #import pdb; pdb.set_trace()
+
         i = 0
         for idx, wvs in tqdm(self.vecs.items()):
-            #print(idx)
-         #   import pdb; pdb.set_trace()
             vec = np.zeros(self.embed_dim)
             w = weight[i]
             i += 1
@@ -59,7 +47,6 @@ class SemanticVec:
             v = v.astype('float64')
             senvec[idx] = v
             print(v.dtype)
-#        print(senvec.shape)
         return senvec
 
 
@@ -75,7 +62,6 @@ class SemanticVec:
         print('Word Embedding...')
         # pre-trained on Common Crawl Corpus dataset using the FastText algorithm
         model = fasttext.load_model(self.w2vmodel)
-        # model = gensim.models.KeyedVectors.load_word2vec_format(self.w2vmodel, binary=False, encoding='utf8')
         self.vecs = dict()
         for idx, line in tqdm(self.t2w_filter.items()):
             vec = list()
@@ -89,20 +75,16 @@ class SemanticVec:
         corpus = list()
         for idx, lines in self.t2w_filter.items():
             corpus.append(' '.join(lines))
-            # corpus = [l for idx, lines in self.t2w_filter.iterms() l = ' '.join(lines)]
         X = vectorizer.fit_transform(corpus)
 
-        # word = vectorizer.get_feature_names()
 
-        # import pdb; pdb.set_trace()
         transformer = TfidfTransformer()
-        # print transformer
-        # import ipdb; ipdb.set_trace()
+
         tfidf = transformer.fit_transform(X)
         M, N = tfidf._swap(tfidf.shape)
-        # weight = self.csr_todense(M, N, tfidf.indptr, tfidf.indices, tfidf.data)
+
         weight = tfidf.toarray()
-        # import ipdb; ipdb.set_trace()
+
         return weight, vectorizer
 
 parser = argparse.ArgumentParser()
@@ -111,9 +93,7 @@ args = parser.parse_args()
 ratio =  args.ratio
 w2vmodelPath = '../pre-trained-model/crawl-300d-2M-subword.bin'
 t2wPath = '../data/container_0319/template2words.pkl'
-#t2wPath = '../data/hdfs_' + str(ratio) + '/my_hdfs_' + str(ratio) + '_template2words.pkl'
 embed_dim = 300
 model = SemanticVec(w2vmodelPath, t2wPath, embed_dim)
 vecs = model.run()
 pickle.dump(vecs, open('../data/container_0319/sentence2vec.pkl', 'wb'))
-#pickle.dump(vecs, open('../data/hdfs_' + str(ratio) + '/sentence2vec.pkl', 'wb'))

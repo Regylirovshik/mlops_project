@@ -1,19 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import gensim
 import pickle
-import time
-import numpy
 from tqdm import tqdm
 import os
 import torch.utils.data as data
-from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
-from perf_model import LogRobustModel, BiLSTM, AC_BiLSTM, Time_BiLSTM
+from perf_model import  BiLSTM
 import numpy as np
-import argparse
-from sklearn.preprocessing import MinMaxScaler
+
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -36,27 +31,18 @@ class SeqDataset(data.Dataset):
         self.outputs = []
         self.lengths = []
         self.timedelta = []
-        # normalFN = 'my_hdfs_train_normal'
-        # abnormalFN = 'my_hdfs_train_abnormal'
-        # if not perf:
         self.cnt = 0
         self.time_sum = 0
         self.s2v = pickle.load(open(s2vFN, 'rb'))
-        # self.s2va = pickle.load(open('data/my_dataset/LogInsight_merged_hdfs_bert_cased_ori.pkl', 'rb'))
-        # seq_dataset = get_dataset('my_hdfs_train_normal', 'my_hdfs_train_abnormal', s2v)
         self.dataLabeled(normalFN, 0)
         self.dataLabeled(abnormalFN, 1)
         self.dataLabeled(perfFN, 2)
-        # import pdb; pdb.set_trace()
         # record by list, following time labeled should follow the same order   
         self.time_dataLabeled(normalFN + '_time')
         self.time_dataLabeled(abnormalFN + '_time')
         self.time_dataLabeled(perfFN + '_time')
-        # print('max inputs length: ', max(len(self.inputs[i]) for i in range(len(self.inputs))))
         self.standardscaler()
-        # return inputs, outputs
-        # mms = MinMaxScaler()
-        # self.timedelta = mms.fit_transform(self.timedelta)
+
     def standardscaler(self):
         mean = self.time_sum / self.cnt
         se = 0
@@ -73,7 +59,6 @@ class SeqDataset(data.Dataset):
     def __getitem__(self, index):
         return torch.tensor(self.inputs[index]), torch.tensor(self.timedelta[index]), torch.tensor(self.outputs[index]), torch.tensor(self.lengths[index])
 
-
     def __len__(self):
         # You should change 0 to the total size of your dataset.
         return len(self.outputs)
@@ -84,14 +69,12 @@ class SeqDataset(data.Dataset):
                 self.num_sessions += 1
                 line = tuple(map(lambda n: n - 1, map(int, line.strip().split())))
                 vecs = []
-#                import pdb; pdb.set_trace()
+
                 for i in range(len(line)):
-                    # if self.perf:
-                    #    vecs.append(line[i])
-                    # else:
+
                     eid = int(line[i]) + 1
                     vecs.append(self.s2v[eid])
-                # for i in range(len(line) - window_size):
+
                 self.inputs.append(vecs)  # [len, emd]
                 self.outputs.append(label)
                 self.lengths.append(len(line))
@@ -102,34 +85,27 @@ class SeqDataset(data.Dataset):
                 self.num_sessions += 1
                 line = tuple(map(lambda n: n - 1, map(int, line.strip().split())))
                 vecs = []
-#                import pdb; pdb.set_trace()
+
                 for i in range(len(line)):
-                    # if self.perf:
-                    #    vecs.append(line[i])
-                    # else:
                     eid = int(line[i]) + 1
                     vecs.append(self.s2va[eid])
-                # for i in range(len(line) - window_size):
+
                 self.inputs.append(vecs)  # [len, emd]
                 self.outputs.append(label)
                 self.lengths.append(len(line))
     def time_dataLabeled(self, FN):
         with open(FN, 'r') as f:
             for line in tqdm(f.readlines()):
-                #import pdb; pdb.set_trace()
+
                 self.num_sessions += 1
                 line = tuple(map(lambda n: n, map(int, line.strip().split())))
-                #line = line.strip().split()
                 td = [-1]
+
                 for i in range(len(line)):
                     td.append(line[i])
-                    # if line[i] == 0:
-                    #     td.append(1.5)
-                    # else:
-                    #     td.append(1 / line[i])
                     self.cnt += len(line)
                 self.time_sum += sum(td)
-                #td = [-1] + [ line[i] for i in range(len(line))]
+
                 self.timedelta.append(td) # [len]
 
 
@@ -178,15 +154,13 @@ class PadCollate:
         """
         # find longest sequence
         max_len = max(map(lambda x: x[0].shape[self.dim], batch))
-        # print('max len', max_len)
-        # pad according to max_len
-#        pad_batch = map(lambda x: pad_tensor(x[0], pad=max_len, dim=self.dim), batch)
+
         pad_batch = []
         for i in range(len(batch)):
             pad_batch.append(pad_tensor(batch[i][0], pad=max_len, dim=self.dim, typ=self.type))
         xs = torch.stack(pad_batch, dim=0) # [b, ml, e]
         pad_batch_2 = [] 
-        # import pdb; pdb.set_trace()
+
         for i in range(len(batch)):
             pad_batch_2.append(pad_tensor(batch[i][1], pad=max_len, dim=self.dim, typ=torch.float32))
         txs = torch.stack(pad_batch_2, dim=0) # [b, ml]
@@ -197,18 +171,8 @@ class PadCollate:
     def __call__(self, batch):
         return self.pad_collate(batch)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-encoding', default='hdfs_sentence2vec.pkl', type=str)
-    parser.add_argument('-embeddim', default=300, type=int)
-    parser.add_argument('-timedim', default=300, type=int)
-    parser.add_argument('-dataset', default='hdfs', type=str)
-    parser.add_argument('-type', default=10, type=str)
-    parser.add_argument('-output', default='model/default.pt', type=str)
-    parser.add_argument('-bi', default='True', type=bool)
-    parser.add_argument('-attn', default='True', type=bool)
-    parser.add_argument('-indir', default='data/LogInsight/hdfs', type=str)
-    args = parser.parse_args()
+def train(args):
+
     encodingFN = args.encoding
     time_dim = args.timedim
     embed_dim = args.embeddim
@@ -217,18 +181,17 @@ if __name__ == '__main__':
     bidirectional = args.bi
     indir = args.indir
     attnFlag = args.attn
-#    import pdb; pdb.set_trace()
+
     datasetName = args.dataset
 
     if tensortype == 'float32':
         tensortype = torch.float32
     elif tensortype == 'double':
         tensortype = torch.double
-    #elif tensortype == 'long':
-   #     tensortype = torch.long
+
     model = BiLSTM(batch_size, embed_dim, hidden_size, num_layers, num_classes,  bidirectional,
                    True, attnFlag, time_dim, device).to(device)
-    #model = AC_BiLSTM(embed_dim, hidden_size, num_layers, num_classes, bidirectional, device).to(device)
+
     dataloader = DataLoader(
         SeqDataset(indir + '/my_' + datasetName + '_train_normal',
                    indir + '/my_' + datasetName + '_train_abnormal',
@@ -242,14 +205,11 @@ if __name__ == '__main__':
     )
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
-#    optimizer = optim.SGD(model.parameters(), lr=0.01, weight_decay=0.0001, momentum=0.9)
-    #import pdb; pdb.set_trace()
-    #for step, fk in enumerate(dataloader):
-   # import pdb; pdb.set_trace()
+
     for epoch in range(num_epochs):
         train_loss = 0
         for step, (seq, timedelta, label, leng) in enumerate(dataloader):
-            #import pdb; pdb.set_trace()
+
             y, output, seq_len = model(seq.to(device), timedelta.to(device), label.to(device), leng.to(device))
 
             loss = criterion(output, y)
@@ -258,9 +218,7 @@ if __name__ == '__main__':
             train_loss += loss.item()
             optimizer.step()
         print('Epoch [{}/{}], Train_loss: {:.4f}'.format(epoch+1, num_epochs, train_loss))
-    #import pdb; pdb.set_trace()
-  #  if not os.path.isdir(model_dir):
-   #     os.makedirs(model_dir)
+
     torch.save(model.state_dict(), outputPath)
-    #torch.save(model.timeembedding, 'model/time_embedding.pt')
+
     print('Finished Training')

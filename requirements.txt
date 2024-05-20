@@ -1,9 +1,6 @@
-gensim==3.8.1
 numpy==1.18.5
 wordninja==2.0.0
-bert_serving_client==1.10.0
 fasttext==0.9.1
-ipdb==0.13.4
 scipy==1.6.1
 tqdm==4.46.1
 jieba==0.42.1
