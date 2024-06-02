@@ -4,11 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="88f82f88-e09b-45c9-9f6a-e029094751c0" name="Changes" comment="DVC" />
+    <list default="true" id="9ed0fcc2-fb8d-4800-a89c-e14effa51ec1" name="Changes" comment="DVC" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+    </option>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -55,6 +60,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
     "last_opened_file_path": "C:/mlops_project/SwissLog"
   }
 }]]></component>
@@ -132,6 +138,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Dev brahch init" />
     <MESSAGE value="Almost ready 2 task" />
+    <MESSAGE value="Merge branch 'development'" />
     <MESSAGE value="DVC" />
     <option name="LAST_COMMIT_MESSAGE" value="DVC" />
   </component>
