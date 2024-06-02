@@ -1,0 +1,5 @@
+outs:
+- md5: a26f57aea4aaf083419f30480e8322f0
+  size: 468311
+  hash: md5
+  path: EngCorpus.pkl
