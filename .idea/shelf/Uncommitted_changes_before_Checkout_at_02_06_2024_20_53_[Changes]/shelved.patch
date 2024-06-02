@@ -1,0 +1,14 @@
+Index: requirements.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>numpy==1.18.5\r\nwordninja==2.0.0\r\nfasttext==0.9.1\r\nscipy==1.6.1\r\ntqdm==4.46.1\r\njieba==0.42.1\r\npandas==1.2.3\r\ntorch==1.1.0\r\nbert_serving==0.0.1\r\ndatasketch==1.5.3\r\nhashes==1.1.0\r\npython_Levenshtein==0.12.2\r\nscikit_learn==0.24.1\r\ntensorboardX==2.1\r\n\r\n
+===================================================================
+diff --git a/requirements.txt b/requirements.txt
+--- a/requirements.txt	
++++ b/requirements.txt	
+@@ -12,4 +12,4 @@
+ python_Levenshtein==0.12.2
+ scikit_learn==0.24.1
+ tensorboardX==2.1
+-
++psycopg2-binary
