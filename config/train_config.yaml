@@ -1,0 +1,20 @@
+data:
+  batch_size: 32
+  shuffle: true
+  pin_memory: false
+  num_epochs: 30
+model:
+  device: 'cpu'
+  input_size: 1
+  batch_first: true
+  output_size: 1
+  window_size: 10  # sequence window length
+  num_classes: 3
+  hidden_size: 128  # sequence embedding size
+  num_layers: 1
+  attention_size: 16
+  time_dim: 1
+  bidirectional: true
+  perf: true
+experiment:
+  name: "mlops_course"

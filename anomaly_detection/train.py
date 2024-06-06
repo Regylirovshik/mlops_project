@@ -3,25 +3,11 @@ import torch.nn as nn
 import torch.optim as optim
 import pickle
 from tqdm import tqdm
-import os
 import torch.utils.data as data
 from torch.utils.data import DataLoader
-from perf_model import  BiLSTM
+from anomaly_detection.perf_model import BiLSTM
 import numpy as np
-
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-window_size = 10  # sequence window length
-num_classes = 3
-hidden_size = 128  # sequence embedding size
-num_layers = 1
-num_epochs = 30
-batch_size = 32
-attention_size = 16
-model_dir = 'model'
-time_dim = 1
-log = 'Adam_batch_size=' + str(batch_size) + ';epoch=' + str(num_epochs) + 'blk'
+from hydra import compose, initialize
 
 
 class SeqDataset(data.Dataset):
@@ -57,7 +43,10 @@ class SeqDataset(data.Dataset):
                 self.timedelta[i][j] = scale
         
     def __getitem__(self, index):
-        return torch.tensor(self.inputs[index]), torch.tensor(self.timedelta[index]), torch.tensor(self.outputs[index]), torch.tensor(self.lengths[index])
+        return (torch.tensor(self.inputs[index]),
+                torch.tensor(self.timedelta[index]),
+                torch.tensor(self.outputs[index]),
+                torch.tensor(self.lengths[index]))
 
     def __len__(self):
         # You should change 0 to the total size of your dataset.
@@ -79,20 +68,6 @@ class SeqDataset(data.Dataset):
                 self.outputs.append(label)
                 self.lengths.append(len(line))
 
-    def dataLabeleda(self, FN, label):
-        with open(FN, 'r') as f:
-            for line in tqdm(f.readlines()):
-                self.num_sessions += 1
-                line = tuple(map(lambda n: n - 1, map(int, line.strip().split())))
-                vecs = []
-
-                for i in range(len(line)):
-                    eid = int(line[i]) + 1
-                    vecs.append(self.s2va[eid])
-
-                self.inputs.append(vecs)  # [len, emd]
-                self.outputs.append(label)
-                self.lengths.append(len(line))
     def time_dataLabeled(self, FN):
         with open(FN, 'r') as f:
             for line in tqdm(f.readlines()):
@@ -106,8 +81,7 @@ class SeqDataset(data.Dataset):
                     self.cnt += len(line)
                 self.time_sum += sum(td)
 
-                self.timedelta.append(td) # [len]
-
+                self.timedelta.append(td)  # [len]
 
 
 def pad_tensor(vec, pad, dim, typ):
@@ -122,7 +96,7 @@ def pad_tensor(vec, pad, dim, typ):
     """
     pad_size = list(vec.shape)
     pad_size[dim] = pad - vec.size(dim)
-    if (vec.dtype==torch.int64):
+    if vec.dtype == torch.int64:
         vec = torch.tensor(vec, dtype=torch.float32)
 
     return torch.cat([vec, torch.zeros(*pad_size, dtype=typ)], dim=dim)
@@ -158,27 +132,33 @@ class PadCollate:
         pad_batch = []
         for i in range(len(batch)):
             pad_batch.append(pad_tensor(batch[i][0], pad=max_len, dim=self.dim, typ=self.type))
-        xs = torch.stack(pad_batch, dim=0) # [b, ml, e]
+        xs = torch.stack(pad_batch, dim=0)  # [b, ml, e]
         pad_batch_2 = [] 
 
         for i in range(len(batch)):
             pad_batch_2.append(pad_tensor(batch[i][1], pad=max_len, dim=self.dim, typ=torch.float32))
-        txs = torch.stack(pad_batch_2, dim=0) # [b, ml]
-        ys = torch.tensor(list(map(lambda x: x[2], batch))) # [b, 1]
-        ls = torch.tensor(list(map(lambda x: x[3], batch))) # [b, 1]
+        txs = torch.stack(pad_batch_2, dim=0)  # [b, ml]
+        ys = torch.tensor(list(map(lambda x: x[2], batch)))  # [b, 1]
+        ls = torch.tensor(list(map(lambda x: x[3], batch)))  # [b, 1]
         return xs, txs, ys, ls
 
     def __call__(self, batch):
         return self.pad_collate(batch)
 
+
+def get_config():
+    with initialize(version_base=None, config_path="../config"):
+        cfg = compose(config_name="train_config")
+    return cfg
+
+
 def train(args):
 
+    cfg = get_config()
     encodingFN = args.encoding
-    time_dim = args.timedim
     embed_dim = args.embeddim
     tensortype = args.type
     outputPath = args.output
-    bidirectional = args.bi
     indir = args.indir
     attnFlag = args.attn
 
@@ -189,8 +169,16 @@ def train(args):
     elif tensortype == 'double':
         tensortype = torch.double
 
-    model = BiLSTM(batch_size, embed_dim, hidden_size, num_layers, num_classes,  bidirectional,
-                   True, attnFlag, time_dim, device).to(device)
+    model = BiLSTM(cfg.data.batch_size,
+                   embed_dim,
+                   cfg.model.hidden_size,
+                   cfg.model.num_layers,
+                   cfg.model.num_classes,
+                   cfg.model.bidirectional,
+                   cfg.model.perf,
+                   attnFlag,
+                   cfg.model.time_dim,
+                   cfg.model.device).to(cfg.model.device)
 
     dataloader = DataLoader(
         SeqDataset(indir + '/my_' + datasetName + '_train_normal',
@@ -198,26 +186,26 @@ def train(args):
                    indir + '/my_' + datasetName + '_train_perf',
                    encodingFN
                    ),
-        batch_size=batch_size,
-        shuffle=True,
-        pin_memory=False,
+        batch_size=cfg.data.batch_size,
+        shuffle=cfg.data.shiffle,
+        pin_memory=cfg.data.pin_memory,
         collate_fn=PadCollate(dim=0, typ=tensortype)
     )
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
-    for epoch in range(num_epochs):
+    for epoch in range(cfg.data.num_epochs):
         train_loss = 0
         for step, (seq, timedelta, label, leng) in enumerate(dataloader):
 
-            y, output, seq_len = model(seq.to(device), timedelta.to(device), label.to(device), leng.to(device))
+            y, output, seq_len = model(seq.to(cfg.model.device), timedelta.to(cfg.model.device), label.to(cfg.model.device), leng.to(cfg.model.device))
 
             loss = criterion(output, y)
             optimizer.zero_grad()
             loss.backward()
             train_loss += loss.item()
             optimizer.step()
-        print('Epoch [{}/{}], Train_loss: {:.4f}'.format(epoch+1, num_epochs, train_loss))
+        print('Epoch [{}/{}], Train_loss: {:.4f}'.format(epoch+1, cfg.data.num_epochs, train_loss))
 
     torch.save(model.state_dict(), outputPath)
 

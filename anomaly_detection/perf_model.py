@@ -14,7 +14,6 @@ def sort_batch(data, time_data, label,length):
     return (data, time_data, label, length)
 
 
-
 class TimeEmbedding(nn.Module):
     def __init__(self, batch_size, hidden_embedding_size, output_dim):
         super(TimeEmbedding, self).__init__()

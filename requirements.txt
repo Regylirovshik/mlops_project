@@ -1,15 +1,17 @@
-numpy==1.18.5
+numpy
 wordninja==2.0.0
 fasttext==0.9.1
-scipy==1.6.1
+scipy
 tqdm==4.46.1
 jieba==0.42.1
-pandas==1.2.3
-torch==1.1.0
+pandas
+torch==1.11.0
 bert_serving==0.0.1
 datasketch==1.5.3
 hashes==1.1.0
 python_Levenshtein==0.12.2
-scikit_learn==0.24.1
+scikit_learn
 tensorboardX==2.1
+hydra-core
+argparse
 

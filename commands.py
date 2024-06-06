@@ -16,7 +16,7 @@ def add_infer_arguments(parser: argparse.ArgumentParser):
 
 
 def add_common_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('stage', required=True, help="")
+    parser.add_argument('stage', help="")
     parser.add_argument('-encoding', default='hdfs_sentence2vec.pkl', type=str)
     parser.add_argument('-embeddim', default=300, type=int)
     parser.add_argument('-timedim', default=300, type=int)
@@ -40,7 +40,11 @@ def parse_arguments():
     args = parser.parse_args()
 
     if args.stage == 'train':
+        print('training')
         train(args)
     elif args.stage == 'infer':
         infer(args)
 
+
+if __name__ == "__main__":
+    parse_arguments()
